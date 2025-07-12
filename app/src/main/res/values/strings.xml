@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">CheapTech WA</string>
+    <string name="add_header">Add Header</string>
+    <string name="save_settings">Save Settings</string>
+    <string name="api_key">API Key</string>
+    <string name="whatsapp_number">WhatsApp Number</string>
+    <string name="custom_headers">Custom Headers</string>
+    <string name="settings_saved">Settings saved</string>
+</resources>
