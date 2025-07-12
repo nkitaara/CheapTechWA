@@ -7,6 +7,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.0.2'
+        // ✅ No Firebase classpath here (good)
     }
 }
 
@@ -16,3 +17,5 @@ allprojects {
         mavenCentral()
     }
 }
+
+// ✅ No "apply plugin: 'com.google.gms.google-services'" (should only be in app-level if Firebase is used)
