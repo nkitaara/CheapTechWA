@@ -21,7 +21,7 @@ public class NotificationListener extends NotificationListenerService {
     public void onNotificationPosted(StatusBarNotification sbn) {
         String pkg = sbn.getPackageName();
 
-        // Process only WhatsApp and WhatsApp Business notifications
+        // Only process WhatsApp and WhatsApp Business
         if (!"com.whatsapp".equals(pkg) && !"com.whatsapp.w4b".equals(pkg)) return;
 
         Bundle extras = sbn.getNotification().extras;
@@ -29,7 +29,7 @@ public class NotificationListener extends NotificationListenerService {
 
         String sender = extras.getString("android.title");
         CharSequence messageCharSeq = extras.getCharSequence("android.text");
-        String message = messageCharSeq != null ? messageCharSeq.toString() : null;
+        String message = (messageCharSeq != null) ? messageCharSeq.toString() : null;
 
         if (sender == null || message == null || message.trim().isEmpty()) return;
 
@@ -42,11 +42,10 @@ public class NotificationListener extends NotificationListenerService {
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
 
-                // Load preferences
                 SharedPreferences prefs = getSharedPreferences("prefs", MODE_PRIVATE);
                 Map<String, ?> allPrefs = prefs.getAll();
 
-                // Set custom headers
+                // API key and WhatsApp number headers
                 if (allPrefs.containsKey("api_key")) {
                     conn.setRequestProperty("api_key", String.valueOf(allPrefs.get("api_key")));
                 }
@@ -55,10 +54,12 @@ public class NotificationListener extends NotificationListenerService {
                     conn.setRequestProperty("whatsapp_number", String.valueOf(allPrefs.get("whatsapp_number")));
                 }
 
+                // Custom headers (prefixed with "header_")
                 for (String key : allPrefs.keySet()) {
                     if (key.startsWith("header_")) {
-                        String headerName = key.substring(7);
-                        conn.setRequestProperty(headerName, String.valueOf(allPrefs.get(key)));
+                        String headerKey = key.substring(7); // Remove "header_" prefix
+                        String headerValue = String.valueOf(allPrefs.get(key));
+                        conn.setRequestProperty(headerKey, headerValue);
                     }
                 }
 
@@ -79,7 +80,7 @@ public class NotificationListener extends NotificationListenerService {
                 Log.i(TAG, "Webhook response: " + responseCode);
 
             } catch (Exception e) {
-                Log.e(TAG, "Webhook error", e);
+                Log.e(TAG, "Webhook error: ", e);
             }
         }).start();
     }
