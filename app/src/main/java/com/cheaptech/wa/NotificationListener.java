@@ -1,8 +1,9 @@
 package com.cheaptech.wa;
 
+import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
-import android.os.Bundle;
 import android.util.Log;
 
 import org.json.JSONObject;
@@ -13,6 +14,8 @@ import java.net.URL;
 import java.util.Map;
 
 public class NotificationListener extends NotificationListenerService {
+
+    private static final String TAG = "CheapTechWA";
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
@@ -25,43 +28,48 @@ public class NotificationListener extends NotificationListenerService {
         if (extras == null) return;
 
         String sender = extras.getString("android.title");
-        String message = String.valueOf(extras.getCharSequence("android.text"));
+        CharSequence messageCharSeq = extras.getCharSequence("android.text");
+        String message = messageCharSeq != null ? messageCharSeq.toString() : null;
 
-        if (sender == null || message == null) return;
+        if (sender == null || message == null || message.trim().isEmpty()) return;
 
         String whatsappType = pkg.equals("com.whatsapp") ? "standard" : "business";
 
         new Thread(() -> {
             try {
+                // Prepare connection
                 URL url = new URL("https://cheaptech.com.ng/wa_auto.php");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
 
-                // Load shared headers from SharedPreferences
-                Map<String, ?> prefs = getSharedPreferences("prefs", MODE_PRIVATE).getAll();
+                // Shared Preferences for custom headers and API key
+                SharedPreferences prefs = getSharedPreferences("prefs", MODE_PRIVATE);
+                Map<String, ?> allPrefs = prefs.getAll();
 
-                // Add API key and phone number if provided
-                if (prefs.containsKey("api_key")) {
-                    conn.setRequestProperty("api_key", String.valueOf(prefs.get("api_key")));
-                }
-                if (prefs.containsKey("whatsapp_number")) {
-                    conn.setRequestProperty("whatsapp_number", String.valueOf(prefs.get("whatsapp_number")));
+                // Inject API key
+                if (prefs.contains("api_key")) {
+                    conn.setRequestProperty("api_key", String.valueOf(allPrefs.get("api_key")));
                 }
 
-                // Add custom headers
-                for (String key : prefs.keySet()) {
+                // Inject WhatsApp number (if available)
+                if (prefs.contains("whatsapp_number")) {
+                    conn.setRequestProperty("whatsapp_number", String.valueOf(allPrefs.get("whatsapp_number")));
+                }
+
+                // Add custom headers (prefixed with "header_")
+                for (String key : allPrefs.keySet()) {
                     if (key.startsWith("header_")) {
                         String headerKey = key.substring(7); // Remove "header_" prefix
-                        String value = String.valueOf(prefs.get(key));
-                        conn.setRequestProperty(headerKey, value);
+                        String headerValue = String.valueOf(allPrefs.get(key));
+                        conn.setRequestProperty(headerKey, headerValue);
                     }
                 }
 
-                // Add WhatsApp type (standard/business)
+                // Add WhatsApp type
                 conn.setRequestProperty("whatsapp_type", whatsappType);
 
-                // Prepare JSON body
+                // Construct JSON body
                 JSONObject payload = new JSONObject();
                 payload.put("sender", sender);
                 payload.put("message", message);
@@ -73,10 +81,10 @@ public class NotificationListener extends NotificationListenerService {
                 os.close();
 
                 int responseCode = conn.getResponseCode();
-                Log.i("CheapTechWA", "Webhook response: " + responseCode);
+                Log.i(TAG, "Webhook response: " + responseCode);
 
             } catch (Exception e) {
-                Log.e("CheapTechWA", "Webhook error: " + e.getMessage());
+                Log.e(TAG, "Error sending webhook: ", e);
             }
         }).start();
     }
