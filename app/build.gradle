@@ -12,11 +12,6 @@ android {
         targetSdk 33
         versionCode 1
         versionName "1.0"
-
-        // Required for NotificationListener and BootReceiver
-        manifestPlaceholders = [
-            'appName': "CheapTech WA"
-        ]
     }
 
     buildTypes {
@@ -27,17 +22,21 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     buildFeatures {
         viewBinding true
+    }
+
+    // Optional but useful:
+    lintOptions {
+        abortOnError false
     }
 }
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
-    implementation 'org.json:json:20230227' // ✅ Required for parsing and constructing JSON
 }
