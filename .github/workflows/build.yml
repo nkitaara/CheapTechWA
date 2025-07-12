@@ -27,7 +27,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Build Debug APK with Logs
-        run: gradle assembleDebug --stacktrace --info
+        run: gradle assembleDebug --stacktrace --info --debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
