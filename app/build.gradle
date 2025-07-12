@@ -30,8 +30,7 @@ android {
         viewBinding true
     }
 
-    // Optional but useful:
-    lintOptions {
+    lint {
         abortOnError false
     }
 }
